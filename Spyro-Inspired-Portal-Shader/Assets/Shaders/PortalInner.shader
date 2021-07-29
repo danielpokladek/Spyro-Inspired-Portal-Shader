@@ -115,7 +115,7 @@ Shader "DP/Spyro/PortalInner"
             if (difference > 0)
                 intersect = 1 - saturate(difference / _OutlineThresholdMax);
 
-            float4 intersectColor = (intersect * _OutlineStrength) * _OutlineColor;
+            float4 intersectColor = intersect * _OutlineColor;
             fixed4 finalColor = grabPassTexture + intersectColor;
 
             // --- Applying the final color to the shader albedo channel.
