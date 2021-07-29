@@ -6,7 +6,7 @@ Shader "DP/Spyro/PortalBackground"
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" "Queue" = "Geometry-3" }
+        Tags { "RenderType"="Opaque" "Queue" = "Geometry-4" }
         ColorMask 0
         ZWrite Off
 

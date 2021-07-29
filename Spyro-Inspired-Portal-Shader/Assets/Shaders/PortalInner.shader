@@ -16,7 +16,7 @@ Shader "DP/Spyro/PortalInner"
     SubShader
     {
         Tags { "RenderType"="Opaque" "Queue"="Geometry+1" }
-        ZWrite Off
+        
 
         CGPROGRAM
         #pragma surface surf NoLighting noshadow vertex:vert
@@ -80,6 +80,8 @@ Shader "DP/Spyro/PortalInner"
 
         void surf (Input IN, inout SurfaceOutput o)
         {
+            // --- Distortion Effect : Using a texture to distort the background of portal,
+            //  and create the waves effect as seen in original shader.
             float2 distortTexture = UnpackNormal(tex2D(_DistortTexture, IN.distortUV.xy)).xy;
             float2 distortTexture2 = UnpackNormal(tex2D(_DistortTexture, IN.distortUV.zw)).xy;
             distortTexture *= _DistortStrength / 100;
@@ -87,15 +89,22 @@ Shader "DP/Spyro/PortalInner"
 
             float combinedDistortion = distortTexture + distortTexture2;
 
-            // --- --- ---
+            // --- Background UVs : In order to use the grab pass texture, we need to calculate
+            //  the correct UV coordinates; in order to do that we use the screen position that
+            //  Unity calculates for us; we add the distortion to the UVs and multiply it by the
+            //  fade value to scale the effect down at a distance.
 
             float4 portalBackgroundUV = IN.backgroundUV;
             float fade = 1 - saturate(fwidth(portalBackgroundUV) * _FadeDistance);
-            portalBackgroundUV.xy += combinedDistortion * fade * IN.backgroundUV;
+            //portalBackgroundUV.xy += combinedDistortion * fade * IN.backgroundUV;
+            portalBackgroundUV.xy += combinedDistortion;
 
             fixed4 grabPassTexture = tex2Dproj(_PortalBackground, UNITY_PROJ_COORD(portalBackgroundUV));
 
-            // --- --- --- 
+            // --- Outline Effect : In order to create the portal outline effect, we need access
+            //  to the depth texture that is created by our camera (see attached script); we then get
+            //  the scene depth, object depth and get the difference and calculate the intersection
+            //  based on the depth difference. Finally we add colour to the outline.
 
             float sceneDepth = 
                 LinearEyeDepth(SAMPLE_DEPTH_TEXTURE_PROJ(_CameraDepthTexture, UNITY_PROJ_COORD(IN.screenPos)));
@@ -106,9 +115,10 @@ Shader "DP/Spyro/PortalInner"
             if (difference > 0)
                 intersect = 1 - saturate(difference / _OutlineThresholdMax);
 
-            float4 intersectColor = intersect * _OutlineColor;
-            //fixed4 finalColor = grabPassTexture + intersectColor;
-            fixed4 finalColor = fixed4(lerp(grabPassTexture, intersectColor, pow(intersect, 4.0)));
+            float4 intersectColor = (intersect * _OutlineStrength) * _OutlineColor;
+            fixed4 finalColor = grabPassTexture + intersectColor;
+
+            // --- Applying the final color to the shader albedo channel.
 
             o.Albedo = finalColor;
         }
