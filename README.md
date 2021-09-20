@@ -1,4 +1,4 @@
-<h1 align="center"> Spyro The Dragon Inspired Portal Shader </h1>
+<h1 align="center"> Spyro: Reignited Trilogy Inspired Portal Shader </h1>
 
 |Custom Shader Version | Original Spyro: Reignited Trilogy Version |
 |-|-|
